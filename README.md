@@ -8,17 +8,17 @@ Installing inside a Vagrant VM makes it easier to have multiple different dynamo
 
 Install VirtualBox, Vagrant and Ansible using your OS package manager (brew, apt-get, yum), then run the following commands to install the local `vagrant-dns` server:
 
-`vagrant plugin install vagrant-dns`
-`vagrant dns --install`
+ - `vagrant plugin install vagrant-dns`
+ - `vagrant dns --install`
 
 Run the following command to bring up the VM:
 
-`vagrant up`
+ - `vagrant up`
 
 Install DynamoDB on the VM:
 
-`chmod +x ansible/provision-vagrant.sh`
-`./ansible/provision-vagrant.sh`
+ - `chmod +x ansible/provision-vagrant.sh`
+ - `./ansible/provision-vagrant.sh`
 
 You can now access the local DynamoDB instance though the hostname `dynamodb.vagrant`.
 
