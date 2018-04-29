@@ -1,0 +1,52 @@
+- hosts: db
+  become: yes
+  vars:
+    dynamodb_url: "https://s3.eu-central-1.amazonaws.com/dynamodb-local-frankfurt/dynamodb_local_latest.tar.gz"
+    dynamodb_checksum_url: "https://s3.eu-central-1.amazonaws.com/dynamodb-local-frankfurt/dynamodb_local_latest.tar.gz.sha256"
+    dynamodb_tar_filename: "dynamodb_local_latest.tar.gz"
+    dynamodb_checksum: "sha256:{{ lookup('url', dynamodb_checksum_url).split(' ')[0] }}"
+
+  tasks:
+
+    - debug:
+        msg: "dynamodb_checksum: {{ dynamodb_checksum }}"
+
+    - name: Download DynamoDB
+      get_url:
+        url: "{{ dynamodb_url }}"
+        dest: "/tmp/{{ dynamodb_tar_filename }}"
+        tmp_dest: /tmp/
+        checksum: "{{ dynamodb_checksum }}"
+
+    - name: Ensure dynamodb directory exists
+      file:
+        path: /usr/lib/dynamodb
+        state: directory
+
+    - name: Extract DynamoDB
+      unarchive:
+        src: "/tmp/{{ dynamodb_tar_filename }}"
+        dest: /usr/lib/dynamodb
+        remote_src: yes
+
+    - name: Start DynamoDB
+      shell: cd /usr/lib/dynamodb && nohup java -Djava.library.path=./DynamoDBLocal_lib -jar DynamoDBLocal.jar -sharedDb </dev/null >/dev/null 2>&1 &
+
+    - name: Add Node yum repos
+      shell: |
+        curl --silent --location https://rpm.nodesource.com/setup_8.x | bash -
+
+    - name: Install Node
+      yum:
+        name: nodejs
+        state: latest
+
+    - name: Install dynamodb-admin
+      npm:
+        name: dynamodb-admin
+        global: yes
+
+    - name: Run dynamodb-admin
+      shell: DYNAMO_ENDPOINT=http://localhost:8000 nohup /usr/bin/dynamodb-admin >/dev/null 2>/dev/null &
+      async: 10
+      poll: 0
